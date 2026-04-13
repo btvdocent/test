@@ -1,1 +1,227 @@
-...
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactieve Les: Decor Schrijven voor de Politieacademie</title>
+    <style>
+        :root {
+            --police-blue: #003366;
+            --police-gold: #c5a059;
+            --light-gray: #f4f4f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header {
+            border-bottom: 3px solid var(--police-blue);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h1 { color: var(--police-blue); margin-bottom: 5px; }
+        h2 { color: var(--police-blue); border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+
+        .scenario-box {
+            background-color: #eef4faff;
+            border-left: 5px solid var(--police-blue);
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .instruction-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .tag-fixed { background: #d1e7dd; color: #0f5132; }
+        .tag-variable { background: #fff3cd; color: #664d03; }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: var(--police-blue);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover { background-color: #002244; }
+
+        .output-section {
+            margin-top: 40px;
+        }
+
+        .report-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .report-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-style: italic;
+            color: #444;
+        }
+
+        .feedback-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+
+        .feedback-item {
+            background: #f9f9f9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            border-left: 3px solid var(--police-gold);
+        }
+
+        .feedback-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .feedback-input-group input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>PV-Training: Decoromschrijving</h1>
+        <p><em>Leerdoel: Correcte toepassing van tijd en redenen van wetenschap.</em></p>
+    </header>
+
+    <section class="scenario-box">
+        <h3>De Casus: Incident in de Smalle Steeg</h3>
+        <p><strong>Melding:</strong> Geluidsoverlast en mogelijke vernieling achter café 'De Tap'.</p>
+        <p><strong>Locatie:</strong> Een doodlopende steeg tussen de Hoogstraat en de Kerkstraat. Er staat een grote blauwe afvalcontainer en de verlichting is matig.</p>
+        <p><strong>Bij aankomst:</strong> Je ziet een man met een rode hoodie wegrennen. Er ligt glas op de grond. Een vrouw (de melder) staat trillend bij de container. Het ruikt sterk naar verschraald bier.</p>
+    </section>
+
+    <section class="writing-section">
+        <h2>Schrijf hier je decor</h2>
+        <div style="margin-bottom: 10px;">
+            <span class="instruction-tag tag-fixed">Vast decor: Tegenwoordige tijd (is/staan/bevindt)</span>
+            <span class="instruction-tag tag-variable">Variabel decor: Verleden tijd + Zintuiglijk (ik zag/ik rook/ik hoorde)</span>
+        </div>
+        <textarea id="reportInput" placeholder="Begin met: 'Ter plaatse gekomen zag ik dat...'"></textarea>
+        <button onclick="submitReport()">Publiceer Verslag</button>
+    </section>
+
+    <section class="output-section">
+        <h2>Gepubliceerde Verslagen & Feedback</h2>
+        <div id="reportsDisplay">
+            </div>
+    </section>
+</div>
+
+<script>
+    let reports = [];
+
+    function submitReport() {
+        const text = document.getElementById('reportInput').value;
+        if (text.trim() === "") {
+            alert("Schrijf eerst een tekst voordat je deze publiceert.");
+            return;
+        }
+
+        const reportObject = {
+            id: Date.now(),
+            content: text,
+            feedback: []
+        };
+
+        reports.unshift(reportObject); // Nieuwste bovenaan
+        document.getElementById('reportInput').value = "";
+        renderReports();
+    }
+
+    function addFeedback(reportId) {
+        const input = document.getElementById(`fb-input-${reportId}`);
+        const feedbackText = input.value;
+
+        if (feedbackText.trim() === "") return;
+
+        const report = reports.find(r => r.id === reportId);
+        report.feedback.push(feedbackText);
+        
+        input.value = "";
+        renderReports();
+    }
+
+    function renderReports() {
+        const display = document.getElementById('reportsDisplay');
+        display.innerHTML = "";
+
+        reports.forEach(report => {
+            const card = document.createElement('div');
+            card.className = 'report-card';
+
+            let feedbackHtml = report.feedback.map(fb => `
+                <div class="feedback-item">${fb}</div>
+            `).join('');
+
+            card.innerHTML = `
+                <div class="report-text">${report.content}</div>
+                <div class="feedback-container">
+                    <strong>Feedback van collega's:</strong>
+                    <div id="fb-list-${report.id}">${feedbackHtml || '<p style="color: #999; font-size: 0.8em;">Nog geen feedback ontvangen.</p>'}</div>
+                    <div class="feedback-input-group">
+                        <input type="text" id="fb-input-${report.id}" placeholder="Geef feedback op taalgebruik of inhoud...">
+                        <button onclick="addFeedback(${report.id})" style="padding: 5px 10px; font-size: 0.8em;">OK</button>
+                    </div>
+                </div>
+            `;
+            display.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
