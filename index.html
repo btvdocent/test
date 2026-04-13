@@ -9,6 +9,7 @@
             --police-blue: #003366;
             --police-gold: #c5a059;
             --light-gray: #f4f4f9;
+            --danger-red: #b02a37;
         }
 
         body {
@@ -67,6 +68,12 @@
             margin-bottom: 10px;
         }
 
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
         button {
             background-color: var(--police-blue);
             color: white;
@@ -79,6 +86,17 @@
         }
 
         button:hover { background-color: #002244; }
+
+        button.reset-btn {
+            background-color: transparent;
+            color: var(--danger-red);
+            border: 1px solid var(--danger-red);
+        }
+
+        button.reset-btn:hover {
+            background-color: var(--danger-red);
+            color: white;
+        }
 
         .output-section {
             margin-top: 40px;
@@ -151,7 +169,11 @@
             <span class="instruction-tag tag-variable">Variabel decor: Verleden tijd + Zintuiglijk (ik zag/ik rook/ik hoorde)</span>
         </div>
         <textarea id="reportInput" placeholder="Begin met: 'Ter plaatse gekomen zag ik dat...'"></textarea>
-        <button onclick="submitReport()">Publiceer Verslag</button>
+        
+        <div class="button-group">
+            <button onclick="submitReport()">Publiceer Verslag</button>
+            <button class="reset-btn" onclick="resetDatabase()">Lessen herstarten (Leegmaken)</button>
+        </div>
     </section>
 
     <section class="output-section">
@@ -177,7 +199,7 @@
             feedback: []
         };
 
-        reports.unshift(reportObject); // Nieuwste bovenaan
+        reports.unshift(reportObject); 
         document.getElementById('reportInput').value = "";
         renderReports();
     }
@@ -195,9 +217,22 @@
         renderReports();
     }
 
+    function resetDatabase() {
+        const confirmReset = confirm("Weet u zeker dat u alle ingezonden verslagen en feedback wilt verwijderen? Dit kan niet ongedaan worden gemaakt.");
+        if (confirmReset) {
+            reports = [];
+            renderReports();
+        }
+    }
+
     function renderReports() {
         const display = document.getElementById('reportsDisplay');
         display.innerHTML = "";
+
+        if (reports.length === 0) {
+            display.innerHTML = '<p style="color: #999; text-align: center; margin-top: 20px;">Er zijn nog geen verslagen gepubliceerd.</p>';
+            return;
+        }
 
         reports.forEach(report => {
             const card = document.createElement('div');
@@ -213,7 +248,7 @@
                     <strong>Feedback van collega's:</strong>
                     <div id="fb-list-${report.id}">${feedbackHtml || '<p style="color: #999; font-size: 0.8em;">Nog geen feedback ontvangen.</p>'}</div>
                     <div class="feedback-input-group">
-                        <input type="text" id="fb-input-${report.id}" placeholder="Geef feedback op taalgebruik of inhoud...">
+                        <input type="text" id="fb-input-${report.id}" placeholder="Geef feedback...">
                         <button onclick="addFeedback(${report.id})" style="padding: 5px 10px; font-size: 0.8em;">OK</button>
                     </div>
                 </div>
@@ -221,6 +256,9 @@
             display.appendChild(card);
         });
     }
+
+    // Initial check
+    renderReports();
 </script>
 
 </body>
