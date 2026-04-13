@@ -30,19 +30,20 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* Login */
         #login-screen {
             text-align: center;
             padding: 50px;
         }
 
-        select, button, textarea {
+        select, input[type="text"], button, textarea {
             padding: 12px;
             margin: 10px 0;
             border-radius: 4px;
             border: 1px solid #ccc;
             font-size: 16px;
         }
+
+        input[type="text"] { width: 250px; }
 
         button {
             background-color: var(--police-blue);
@@ -56,7 +57,6 @@
 
         .reset-btn { background-color: var(--danger); float: right; }
 
-        /* Opdracht */
         .assignment-header {
             border-left: 5px solid var(--police-gold);
             padding-left: 15px;
@@ -74,13 +74,11 @@
 
         .scenario-text { flex: 1; }
         .scenario-img { flex: 1; text-align: center; }
-        .scenario-img img { max-width: 100%; border-radius: 4px; border: 2px solid var(--police-blue); }
+        .scenario-img img { max-width: 100%; border-radius: 4px; border: 2px solid var(--police-blue); margin-bottom: 5px; }
 
-        /* Input area */
         .writing-area { margin-bottom: 40px; }
-        textarea { width: 100%; height: 200px; resize: vertical; box-sizing: border-box; }
+        textarea { width: 100%; height: 180px; resize: vertical; box-sizing: border-box; }
 
-        /* Output */
         .post {
             background: #fff;
             border: 1px solid #ddd;
@@ -95,6 +93,8 @@
             margin-bottom: 10px;
             border-bottom: 1px solid #eee;
             padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .feedback-section {
@@ -113,6 +113,7 @@
         }
 
         .hidden { display: none; }
+        .user-info { font-style: italic; color: var(--police-gold); margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -121,9 +122,10 @@
     <div id="login-screen">
         <img src="politie-embleem.png" alt="Logo Politie" width="100">
         <h1>Beroepstaalvaardigheid: Inloggen</h1>
-        <p>Selecteer uw NATO-klas:</p>
+        <p>Voer uw naam in en selecteer uw NATO-klas:</p>
+        <input type="text" id="user-name" placeholder="Uw achternaam"><br>
         <select id="class-select">
-            <option value="">-- Maak een keuze --</option>
+            <option value="">-- Kies een klas --</option>
             <option>ALPHA</option><option>BRAVO</option><option>CHARLIE</option>
             <option>DELTA</option><option>ECHO</option><option>FOXTROT</option>
             <option>GOLF</option><option>HOTEL</option><option>JULIET</option>
@@ -134,7 +136,9 @@
     </div>
 
     <div id="app" class="hidden">
-        <button class="reset-btn" onclick="resetDatabase()">Reset Systeem</button>
+        <button class="reset-btn" onclick="resetDatabase()">Reset Systeem (Wissen voor iedereen)</button>
+        <div class="user-info" id="current-user-display"></div>
+        
         <div class="assignment-header">
             <h1>Opdracht: Het Decor Beschrijven</h1>
             <p><strong>Leerdoel:</strong> Leer een locatie objectief (vast decor) en subjectief (variabel decor via redenen van wetenschap) te verbaliseren.</p>
@@ -170,16 +174,21 @@
 
 <script>
     let currentClass = "";
-
-    // Data simulatie (Local Storage voor behoud bij verversen, tenzij reset)
-    let db = JSON.parse(localStorage.getItem('politie_db')) || [];
+    let userName = "";
 
     function login() {
-        const sel = document.getElementById('class-select');
-        if(!sel.value) return alert("Kies een klas");
-        currentClass = sel.value;
+        const nameInput = document.getElementById('user-name').value;
+        const sel = document.getElementById('class-select').value;
+        
+        if(!nameInput || !sel) return alert("Voer a.u.b. uw naam in en kies een klas.");
+        
+        userName = nameInput;
+        currentClass = sel;
+        
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
+        document.getElementById('current-user-display').innerText = `Ingelogd als: Verbalisant ${userName} [${currentClass}]`;
+        
         renderPosts();
     }
 
@@ -187,60 +196,71 @@
         const text = document.getElementById('pv-input').value;
         if(!text) return alert("Voer eerst een tekst in");
 
+        let db = JSON.parse(localStorage.getItem('politie_db')) || [];
+        
         const newEntry = {
             id: Date.now(),
+            naam: userName,
             klas: currentClass,
             tekst: text,
             feedback: []
         };
 
         db.push(newEntry);
-        saveAndRender();
+        localStorage.setItem('politie_db', JSON.stringify(db));
         document.getElementById('pv-input').value = "";
+        renderPosts();
     }
 
     function submitFeedback(id) {
         const fbInput = document.getElementById(`fb-in-${id}`);
         if(!fbInput.value) return;
 
+        let db = JSON.parse(localStorage.getItem('politie_db')) || [];
         const entry = db.find(e => e.id === id);
+        
         entry.feedback.push({
+            naam: userName,
             klas: currentClass,
             tekst: fbInput.value
         });
 
-        saveAndRender();
-    }
-
-    function resetDatabase() {
-        if(confirm("Weet u zeker dat u alle ingezonden teksten en feedback wilt wissen?")) {
-            db = [];
-            saveAndRender();
-        }
-    }
-
-    function saveAndRender() {
         localStorage.setItem('politie_db', JSON.stringify(db));
         renderPosts();
     }
 
+    function resetDatabase() {
+        if(confirm("LET OP: Hiermee wist u de database voor ALLE studenten. Weet u het zeker?")) {
+            localStorage.removeItem('politie_db');
+            renderPosts();
+        }
+    }
+
     function renderPosts() {
         const container = document.getElementById('output-field');
+        const db = JSON.parse(localStorage.getItem('politie_db')) || [];
         container.innerHTML = "";
 
         db.slice().reverse().forEach(entry => {
             const post = document.createElement('div');
             post.className = 'post';
             post.innerHTML = `
-                <div class="post-header">Inzending van Klas: ${entry.klas}</div>
+                <div class="post-header">
+                    <span>Inzending door: Verbalisant ${entry.naam}</span>
+                    <span>Klas: ${entry.klas}</span>
+                </div>
                 <div class="post-content">${entry.tekst.replace(/\n/g, '<br>')}</div>
                 <div class="feedback-section">
-                    <strong>Feedback:</strong>
+                    <strong>Feedback van collega's:</strong>
                     <div id="fb-list-${entry.id}">
-                        ${entry.feedback.map(f => `<div class="feedback-item"><strong>${f.klas}:</strong> ${f.tekst}</div>`).join('')}
+                        ${entry.feedback.map(f => `
+                            <div class="feedback-item">
+                                <strong>${f.naam} [${f.klas}]:</strong> ${f.tekst}
+                            </div>
+                        `).join('')}
                     </div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input type="text" id="fb-in-${entry.id}" placeholder="Geef feedback..." style="flex:1; padding:5px;">
+                        <input type="text" id="fb-in-${entry.id}" placeholder="Geef feedback als ${userName}..." style="flex:1; padding:5px;">
                         <button onclick="submitFeedback(${entry.id})" style="padding:5px 10px;">OK</button>
                     </div>
                 </div>
@@ -248,6 +268,11 @@
             container.appendChild(post);
         });
     }
+
+    // Luister naar veranderingen in andere tabbladen (voor als studenten elkaars werk live willen zien)
+    window.addEventListener('storage', () => {
+        renderPosts();
+    });
 </script>
 
 </body>
