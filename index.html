@@ -3,264 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PV-Training: Decoromschrijving - Politieacademie</title>
+    <title>PV-Training: Het Decor - Politieacademie</title>
     <style>
         :root {
             --police-blue: #003366;
             --police-gold: #c5a059;
             --light-gray: #f4f4f9;
-            --danger-red: #b02a37;
+            --danger: #dc3545;
+            --success: #198754;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--light-gray);
             margin: 0;
             padding: 20px;
             color: #333;
         }
 
-        /* Login Overlay */
-        #loginOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--police-blue);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            color: white;
-        }
-
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            text-align: center;
-            color: #333;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 90%;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px;
-            margin: 20px 0;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 1em;
-        }
-
-        /* Main Container */
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: none; /* Hidden until login */
         }
 
-        header {
-            border-bottom: 3px solid var(--police-blue);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
+        /* Login */
+        #login-screen {
+            text-align: center;
+            padding: 50px;
         }
 
-        h1 { color: var(--police-blue); margin: 0; }
-        .class-badge { background: var(--police-gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-
-        .scenario-box {
-            background-color: #eef4faff;
-            border-left: 5px solid var(--police-blue);
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-
-        .instruction-tag {
-            display: inline-block;
-            padding: 3px 8px;
+        select, button, textarea {
+            padding: 12px;
+            margin: 10px 0;
             border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-right: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
         }
-        .tag-fixed { background: #d1e7dd; color: #0f5132; }
-        .tag-variable { background: #fff3cd; color: #664d03; }
-
-        textarea {
-            width: 100%; height: 150px; padding: 12px;
-            border: 1px solid #ccc; border-radius: 4px;
-            box-sizing: border-box; font-family: inherit;
-            font-size: 1em; margin-bottom: 10px;
-        }
-
-        .button-group { display: flex; gap: 10px; margin-bottom: 20px; }
 
         button {
             background-color: var(--police-blue);
-            color: white; padding: 10px 20px; border: none;
-            border-radius: 4px; cursor: pointer; font-weight: bold;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        button.reset-btn { background: transparent; color: var(--danger-red); border: 1px solid var(--danger-red); }
-        button.reset-btn:hover { background: var(--danger-red); color: white; }
+        button:hover { opacity: 0.9; }
 
-        .report-card {
-            background: #fff; border: 1px solid #ddd; padding: 20px;
-            margin-bottom: 20px; border-radius: 6px; position: relative;
+        .reset-btn { background-color: var(--danger); float: right; }
+
+        /* Opdracht */
+        .assignment-header {
+            border-left: 5px solid var(--police-gold);
+            padding-left: 15px;
+            margin-bottom: 25px;
         }
 
-        .report-meta { font-size: 0.8em; color: #777; margin-bottom: 10px; }
-        .report-text { white-space: pre-wrap; line-height: 1.6; font-style: italic; color: #444; }
+        .scenario-box {
+            display: flex;
+            gap: 20px;
+            background: #eef4fb;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+        }
+
+        .scenario-text { flex: 1; }
+        .scenario-img { flex: 1; text-align: center; }
+        .scenario-img img { max-width: 100%; border-radius: 4px; border: 2px solid var(--police-blue); }
+
+        /* Input area */
+        .writing-area { margin-bottom: 40px; }
+        textarea { width: 100%; height: 200px; resize: vertical; box-sizing: border-box; }
+
+        /* Output */
+        .post {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        .post-header {
+            font-weight: bold;
+            color: var(--police-blue);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .feedback-section {
+            margin-top: 15px;
+            background: #fdfdfd;
+            padding: 10px;
+            border-top: 1px dashed #ccc;
+        }
 
         .feedback-item {
-            background: #f9f9f9; padding: 8px 12px; border-radius: 4px;
-            margin-bottom: 5px; font-size: 0.9em; border-left: 3px solid var(--police-gold);
+            font-size: 0.9em;
+            background: #f1f1f1;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
         }
 
-        .feedback-input-group { display: flex; gap: 10px; margin-top: 10px; }
-        .feedback-input-group input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2 style="color: var(--police-blue)">Systeem Toegang</h2>
-        <p>Selecteer uw NATO-klas om te beginnen:</p>
-        <select id="classSelect">
-            <option value="">-- Kies een klas --</option>
-            <option>Alpha</option>
-            <option>Bravo</option>
-            <option>Charlie</option>
-            <option>Delta</option>
-            <option>Echo</option>
-            <option>Foxtrot</option>
-            <option>Golf</option>
-            <option>Hotel</option>
-            <option>Juliet</option>
-            <option>Kilo</option>
-            <option>Lima</option>
-            <option>Mike</option>
+<div class="container">
+    <div id="login-screen">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Logo_Politie.svg/1200px-Logo_Politie.svg.png" alt="Logo Politie" width="100">
+        <h1>Beroepstaalvaardigheid: Inloggen</h1>
+        <p>Selecteer uw NATO-klas:</p>
+        <select id="class-select">
+            <option value="">-- Maak een keuze --</option>
+            <option>ALPHA</option><option>BRAVO</option><option>CHARLIE</option>
+            <option>DELTA</option><option>ECHO</option><option>FOXTROT</option>
+            <option>GOLF</option><option>HOTEL</option><option>JULIET</option>
+            <option>KILO</option><option>LIMA</option><option>MIKE</option>
         </select>
-        <button onclick="login()" style="width: 100%">Inloggen</button>
+        <br>
+        <button onclick="login()">Start Oefening</button>
+    </div>
+
+    <div id="app" class="hidden">
+        <button class="reset-btn" onclick="resetDatabase()">Reset Systeem</button>
+        <div class="assignment-header">
+            <h1>Opdracht: Het Decor Beschrijven</h1>
+            <p><strong>Leerdoel:</strong> Leer een locatie objectief (vast decor) en subjectief (variabel decor via redenen van wetenschap) te verbaliseren.</p>
+        </div>
+
+        <div class="scenario-box">
+            <div class="scenario-text">
+                <h3>Scenario: Aanrijding met letsel</h3>
+                <p><strong>Locatie:</strong> Kruispunt Apollolaan / Stadionweg, Amsterdam.</p>
+                <p><strong>Vast decor:</strong> Een T-splitsing met werkende verkeerslichten, fietspaden en een zebrapad. Het wegdek is van asfalt.</p>
+                <p><strong>Situatie bij aankomst:</strong> Een zilveren personenauto staat op het fietspad. Een fietser ligt op het wegdek. De melder (getuige) wijst naar de bestuurder. Er hangt een geur van verbrand rubber.</p>
+                <p><strong>Betrokkenen:</strong> Melder (Dhr. De Vries), Slachtoffer (fietser), Bestuurder (in de auto).</p>
+            </div>
+            <div class="scenario-img">
+                <img src="https://images.unsplash.com/photo-1566378246598-5b11a0ff7f6c?auto=format&fit=crop&w=500&q=80" alt="Ongeval Kruispunt">
+                <small>Beeld ter illustratie van het kruispunt</small>
+            </div>
+        </div>
+
+        <div class="writing-area">
+            <h3>Uw Verslag</h3>
+            <p><em>Let op: Start met het vaste decor (TT) en vervolg met het variabele decor (OVT + zintuigen).</em></p>
+            <textarea id="pv-input" placeholder="Ter plaatse gekomen bevond ik mij op..."></textarea>
+            <button onclick="submitPV()" style="background-color: var(--success);">Publiceer in PV-Veld</button>
+        </div>
+
+        <hr>
+        <h2>Gepubliceerde Teksten & Feedback</h2>
+        <div id="output-field"></div>
     </div>
 </div>
 
-<div class="container" id="mainApp">
-    <header>
-        <div>
-            <h1>PV-Training: Decor</h1>
-            <p>Leerdoel: Redenen van wetenschap & tijdsgebruik</p>
-        </div>
-        <div class="class-badge" id="displayClass">Klas: -</div>
-    </header>
-
-    <section class="scenario-box">
-        <h3>De Casus: Incident in de Smalle Steeg</h3>
-        <p><strong>Locatie:</strong> Een doodlopende steeg tussen de Hoogstraat en de Kerkstraat. Er staat een grote blauwe afvalcontainer en de verlichting is matig.</p>
-        <p><strong>Bij aankomst:</strong> Je ziet een man met een rode hoodie wegrennen. Er ligt glas op de grond. Een vrouw (de melder) staat trillend bij de container. Het ruikt sterk naar verschraald bier.</p>
-    </section>
-
-    <section>
-        <h2>Uw omschrijving</h2>
-        <div style="margin-bottom: 10px;">
-            <span class="instruction-tag tag-fixed">Vast decor: Tegenwoordige tijd</span>
-            <span class="instruction-tag tag-variable">Variabel decor: Verleden tijd + Zintuiglijk</span>
-        </div>
-        <textarea id="reportInput" placeholder="Bijv: De steeg is doodlopend... Ter plaatse gekomen zag ik dat..."></textarea>
-        
-        <div class="button-group">
-            <button onclick="submitReport()">Publiceer Verslag</button>
-            <button class="reset-btn" onclick="resetDatabase()">Lessen herstarten</button>
-        </div>
-    </section>
-
-    <div id="reportsDisplay"></div>
-</div>
-
 <script>
-    let reports = [];
     let currentClass = "";
 
+    // Data simulatie (Local Storage voor behoud bij verversen, tenzij reset)
+    let db = JSON.parse(localStorage.getItem('politie_db')) || [];
+
     function login() {
-        const select = document.getElementById('classSelect');
-        currentClass = select.value;
-        if (!currentClass) {
-            alert("Selecteer eerst een klas.");
-            return;
-        }
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('displayClass').innerText = "Klas: " + currentClass;
-        renderReports();
+        const sel = document.getElementById('class-select');
+        if(!sel.value) return alert("Kies een klas");
+        currentClass = sel.value;
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        renderPosts();
     }
 
-    function submitReport() {
-        const text = document.getElementById('reportInput').value;
-        if (text.trim() === "") return;
+    function submitPV() {
+        const text = document.getElementById('pv-input').value;
+        if(!text) return alert("Voer eerst een tekst in");
 
-        const reportObject = {
+        const newEntry = {
             id: Date.now(),
             klas: currentClass,
-            tijd: new Date().toLocaleTimeString(),
-            content: text,
+            tekst: text,
             feedback: []
         };
 
-        reports.unshift(reportObject); 
-        document.getElementById('reportInput').value = "";
-        renderReports();
+        db.push(newEntry);
+        saveAndRender();
+        document.getElementById('pv-input').value = "";
     }
 
-    function addFeedback(reportId) {
-        const input = document.getElementById(`fb-input-${reportId}`);
-        if (!input.value.trim()) return;
+    function submitFeedback(id) {
+        const fbInput = document.getElementById(`fb-in-${id}`);
+        if(!fbInput.value) return;
 
-        const report = reports.find(r => r.id === reportId);
-        report.feedback.push(`[${currentClass}] ${input.value}`);
-        input.value = "";
-        renderReports();
+        const entry = db.find(e => e.id === id);
+        entry.feedback.push({
+            klas: currentClass,
+            tekst: fbInput.value
+        });
+
+        saveAndRender();
     }
 
     function resetDatabase() {
-        if (confirm("Alle data van deze sessie wissen?")) {
-            reports = [];
-            renderReports();
+        if(confirm("Weet u zeker dat u alle ingezonden teksten en feedback wilt wissen?")) {
+            db = [];
+            saveAndRender();
         }
     }
 
-    function renderReports() {
-        const display = document.getElementById('reportsDisplay');
-        display.innerHTML = "<h2>Gepubliceerde Verslagen</h2>";
+    function saveAndRender() {
+        localStorage.setItem('politie_db', JSON.stringify(db));
+        renderPosts();
+    }
 
-        if (reports.length === 0) {
-            display.innerHTML += '<p style="color: #999;">Nog geen inzendingen.</p>';
-            return;
-        }
+    function renderPosts() {
+        const container = document.getElementById('output-field');
+        container.innerHTML = "";
 
-        reports.forEach(report => {
-            const card = document.createElement('div');
-            card.className = 'report-card';
-            card.innerHTML = `
-                <div class="report-meta">Ingezonden door Klas ${report.klas} om ${report.tijd}</div>
-                <div class="report-text">${report.content}</div>
-                <div style="margin-top:15px; border-top: 1px dashed #ccc; padding-top:10px;">
+        db.slice().reverse().forEach(entry => {
+            const post = document.createElement('div');
+            post.className = 'post';
+            post.innerHTML = `
+                <div class="post-header">Inzending van Klas: ${entry.klas}</div>
+                <div class="post-content">${entry.tekst.replace(/\n/g, '<br>')}</div>
+                <div class="feedback-section">
                     <strong>Feedback:</strong>
-                    <div id="fb-list-${report.id}">${report.feedback.map(fb => `<div class="feedback-item">${fb}</div>`).join('') || '<p style="font-size:0.8em; color:#999">Geen feedback.</p>'}</div>
-                    <div class="feedback-input-group">
-                        <input type="text" id="fb-input-${report.id}" placeholder="Geef feedback als ${currentClass}...">
-                        <button onclick="addFeedback(${report.id})" style="padding:5px 10px">OK</button>
+                    <div id="fb-list-${entry.id}">
+                        ${entry.feedback.map(f => `<div class="feedback-item"><strong>${f.klas}:</strong> ${f.tekst}</div>`).join('')}
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <input type="text" id="fb-in-${entry.id}" placeholder="Geef feedback..." style="flex:1; padding:5px;">
+                        <button onclick="submitFeedback(${entry.id})" style="padding:5px 10px;">OK</button>
                     </div>
                 </div>
             `;
-            display.appendChild(card);
+            container.appendChild(post);
         });
     }
 </script>
