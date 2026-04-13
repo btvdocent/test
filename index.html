@@ -132,11 +132,11 @@
             <option>KILO</option><option>LIMA</option><option>MIKE</option>
         </select>
         <br>
-        <button onclick="login()">Start Live Sessie</button>
+        <button id="loginBtn">Start Live Sessie</button>
     </div>
 
     <div id="app" class="hidden">
-        <button class="reset-btn" onclick="resetDatabase()">Reset Database (Voor iedereen)</button>
+        <button class="reset-btn" id="resetBtn">Reset Database (Voor iedereen)</button>
         <div class="user-info" id="current-user-display"></div>
         
         <div class="assignment-header">
@@ -162,7 +162,7 @@
         <div class="writing-area">
             <h3>Uw Verslag</h3>
             <textarea id="pv-input" placeholder="Ter plaatse gekomen bevond ik mij op..."></textarea>
-            <button onclick="submitPV()" style="background-color: var(--success);">Publiceer Live</button>
+            <button id="submitBtn" style="background-color: var(--success);">Publiceer Live</button>
         </div>
 
         <hr>
@@ -173,12 +173,12 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, getDocs, updateDoc, arrayUnion, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // Firebase Configuratie met de door u verstrekte sleutel
     const firebaseConfig = {
         apiKey: "AIzaSyCCTemDDut8gP3y_S8K4Ss6iVy9ND73aEo",
         authDomain: "lessenbtvdocent.firebaseapp.com",
+        databaseURL: "https://lessenbtvdocent-default-rtdb.europe-west1.firebasedatabase.app/",
         projectId: "lessenbtvdocent",
         storageBucket: "lessenbtvdocent.firebasestorage.app",
         messagingSenderId: "254845148285",
@@ -186,13 +186,18 @@
     };
 
     const firebaseApp = initializeApp(firebaseConfig);
-    const db = getFirestore(firebaseApp);
-    const pvCollection = collection(db, "proces_verbalen");
+    const db = getDatabase(firebaseApp);
+    const pvRef = ref(db, 'proces_verbalen');
 
     let currentClass = "";
     let userName = "";
 
-    window.login = () => {
+    // Event Listeners voor stabiliteit
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('submitBtn').addEventListener('click', submitPV);
+    document.getElementById('resetBtn').addEventListener('click', resetDatabase);
+
+    function login() {
         const nameInput = document.getElementById('user-name').value;
         const sel = document.getElementById('class-select').value;
         if(!nameInput || !sel) return alert("Voer naam in en kies een klas.");
@@ -202,57 +207,64 @@
         document.getElementById('app').classList.remove('hidden');
         document.getElementById('current-user-display').innerText = `Ingelogd als: Verbalisant ${userName} [${currentClass}]`;
         listenToPosts();
-    };
+    }
 
-    window.submitPV = async () => {
+    async function submitPV() {
         const text = document.getElementById('pv-input').value;
         if(!text) return;
         try {
-            await addDoc(pvCollection, {
+            await push(pvRef, {
                 naam: userName,
                 klas: currentClass,
                 tekst: text,
-                feedback: [],
                 timestamp: Date.now()
             });
             document.getElementById('pv-input').value = "";
-        } catch (e) { alert("Fout bij opslaan: " + e.message); }
-    };
+        } catch (e) { alert("Fout: " + e.message); }
+    }
 
-    window.submitFeedback = async (postId) => {
+    window.submitFeedback = (postId) => {
         const fbInput = document.getElementById(`fb-in-${postId}`);
-        if(!fbInput.value) return;
+        if(!fbInput || !fbInput.value) return;
         
-        try {
-            const docRef = doc(db, "proces_verbalen", postId);
-            await updateDoc(docRef, {
-                feedback: arrayUnion({
-                    naam: userName,
-                    klas: currentClass,
-                    tekst: fbInput.value
-                })
-            });
+        const feedbackRef = ref(db, `proces_verbalen/${postId}/feedback`);
+        push(feedbackRef, {
+            naam: userName,
+            klas: currentClass,
+            tekst: fbInput.value
+        }).then(() => {
             fbInput.value = "";
-        } catch (e) { alert("Feedback fout: " + e.message); }
+        }).catch(e => alert("Feedback fout: " + e.message));
     };
 
-    window.resetDatabase = async () => {
-        if(!confirm("LET OP: Hiermee wist u de database voor ALLE studenten. Doorgaan?")) return;
+    async function resetDatabase() {
+        if(!confirm("LET OP: Dit wist alles voor iedereen. Doorgaan?")) return;
         try {
-            const snapshot = await getDocs(pvCollection);
-            const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
-            await Promise.all(deletePromises);
+            await remove(pvRef);
         } catch (e) { alert("Reset fout: " + e.message); }
-    };
+    }
 
     function listenToPosts() {
-        const q = query(pvCollection, orderBy("timestamp", "desc"));
-        onSnapshot(q, (snapshot) => {
+        onValue(pvRef, (snapshot) => {
             const container = document.getElementById('output-field');
             container.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const entry = doc.data();
-                const id = doc.id;
+            const data = snapshot.val();
+            if (!data) return;
+
+            // Sorteren van nieuw naar oud
+            const posts = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            })).sort((a, b) => b.timestamp - a.timestamp);
+
+            posts.forEach((entry) => {
+                let feedbackHtml = '';
+                if (entry.feedback) {
+                    feedbackHtml = Object.values(entry.feedback).map(f => 
+                        `<div class="feedback-item"><strong>${f.naam} [${f.klas}]:</strong> ${f.tekst}</div>`
+                    ).join('');
+                }
+
                 const post = document.createElement('div');
                 post.className = 'post';
                 post.innerHTML = `
@@ -263,10 +275,10 @@
                     <div class="post-content">${entry.tekst.replace(/\n/g, '<br>')}</div>
                     <div class="feedback-section">
                         <strong>Feedback:</strong>
-                        <div>${entry.feedback ? entry.feedback.map(f => `<div class="feedback-item"><strong>${f.naam} [${f.klas}]:</strong> ${f.tekst}</div>`).join('') : ''}</div>
+                        <div id="fb-list-${entry.id}">${feedbackHtml}</div>
                         <div style="display:flex; gap:10px; margin-top:10px;">
-                            <input type="text" id="fb-in-${id}" placeholder="Geef feedback..." style="flex:1; padding:5px;">
-                            <button onclick="submitFeedback('${id}')" style="padding:5px 10px;">OK</button>
+                            <input type="text" id="fb-in-${entry.id}" placeholder="Geef feedback..." style="flex:1; padding:5px;">
+                            <button onclick="submitFeedback('${entry.id}')" style="padding:5px 10px;">OK</button>
                         </div>
                     </div>`;
                 container.appendChild(post);
