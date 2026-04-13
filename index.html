@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PV-Training: Het Decor - Politieacademie</title>
+    <title>Live PV-Training: Het Decor - Politieacademie</title>
     <style>
         :root {
             --police-blue: #003366;
@@ -121,7 +121,7 @@
 <div class="container">
     <div id="login-screen">
         <img src="politie-embleem.png" alt="Logo Politie" width="100">
-        <h1>Beroepstaalvaardigheid: Inloggen</h1>
+        <h1>Beroepstaalvaardigheid: Live Inloggen</h1>
         <p>Voer uw naam in en selecteer uw NATO-klas:</p>
         <input type="text" id="user-name" placeholder="Uw achternaam"><br>
         <select id="class-select">
@@ -132,18 +132,34 @@
             <option>KILO</option><option>LIMA</option><option>MIKE</option>
         </select>
         <br>
-        <button onclick="login()">Start Oefening</button>
+        <button onclick="login()">Start Live Sessie</button>
     </div>
 
     <div id="app" class="hidden">
-        <button class="reset-btn" onclick="resetDatabase()">Reset Systeem (Wissen voor iedereen)</button>
+        <button class="reset-btn" onclick="resetDatabase()">Reset Database (Allen)</button>
         <div class="user-info" id="current-user-display"></div>
         
         <div class="assignment-header">
             <h1>Opdracht: Het Decor Beschrijven</h1>
             <p><strong>Leerdoel:</strong> Leer een locatie objectief (vast decor) en subjectief (variabel decor via redenen van wetenschap) te verbaliseren.</p>
         </div>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCCTemDDut8gP3y_S8K4Ss6iVy9ND73aEo",
+  authDomain: "lessenbtvdocent.firebaseapp.com",
+  projectId: "lessenbtvdocent",
+  storageBucket: "lessenbtvdocent.firebasestorage.app",
+  messagingSenderId: "254845148285",
+  appId: "1:254845148285:web:2f922dfcb7f59d2c2aa514"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
         <div class="scenario-box">
             <div class="scenario-text">
                 <h3>Scenario: Aanrijding met letsel</h3>
@@ -161,9 +177,8 @@
 
         <div class="writing-area">
             <h3>Uw Verslag</h3>
-            <p><em>Let op: Start met het vaste decor (TT) en vervolg met het variabele decor (OVT + zintuigen).</em></p>
             <textarea id="pv-input" placeholder="Ter plaatse gekomen bevond ik mij op..."></textarea>
-            <button onclick="submitPV()" style="background-color: var(--success);">Publiceer in PV-Veld</button>
+            <button onclick="submitPV()" style="background-color: var(--success);">Publiceer Live</button>
         </div>
 
         <hr>
@@ -172,108 +187,106 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // VUL HIER JE EIGEN FIREBASE CONFIG IN
+    const firebaseConfig = {
+        apiKey: "JOUW_API_KEY",
+        authDomain: "JOUW_PROJECT.firebaseapp.com",
+        projectId: "JOUW_PROJECT_ID",
+        storageBucket: "JOUW_PROJECT.appspot.com",
+        messagingSenderId: "JOUW_ID",
+        appId: "JOUW_APP_ID"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
+    const pvCollection = collection(db, "proces_verbalen");
+
     let currentClass = "";
     let userName = "";
 
-    function login() {
+    window.login = () => {
         const nameInput = document.getElementById('user-name').value;
         const sel = document.getElementById('class-select').value;
-        
-        if(!nameInput || !sel) return alert("Voer a.u.b. uw naam in en kies een klas.");
-        
+        if(!nameInput || !sel) return alert("Voer naam in en kies een klas.");
         userName = nameInput;
         currentClass = sel;
-        
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
         document.getElementById('current-user-display').innerText = `Ingelogd als: Verbalisant ${userName} [${currentClass}]`;
-        
-        renderPosts();
-    }
+        listenToPosts();
+    };
 
-    function submitPV() {
+    window.submitPV = async () => {
         const text = document.getElementById('pv-input').value;
-        if(!text) return alert("Voer eerst een tekst in");
+        if(!text) return;
+        try {
+            await addDoc(pvCollection, {
+                naam: userName,
+                klas: currentClass,
+                tekst: text,
+                feedback: [],
+                timestamp: Date.now()
+            });
+            document.getElementById('pv-input').value = "";
+        } catch (e) { alert("Error bij verzenden: " + e); }
+    };
 
-        let db = JSON.parse(localStorage.getItem('politie_db')) || [];
-        
-        const newEntry = {
-            id: Date.now(),
-            naam: userName,
-            klas: currentClass,
-            tekst: text,
-            feedback: []
-        };
-
-        db.push(newEntry);
-        localStorage.setItem('politie_db', JSON.stringify(db));
-        document.getElementById('pv-input').value = "";
-        renderPosts();
-    }
-
-    function submitFeedback(id) {
+    window.submitFeedback = async (id) => {
         const fbInput = document.getElementById(`fb-in-${id}`);
         if(!fbInput.value) return;
-
-        let db = JSON.parse(localStorage.getItem('politie_db')) || [];
-        const entry = db.find(e => e.id === id);
+        const q = query(pvCollection);
+        const snapshot = await getDocs(q);
+        const docRef = snapshot.docs.find(doc => doc.id === id).ref;
         
-        entry.feedback.push({
-            naam: userName,
-            klas: currentClass,
-            tekst: fbInput.value
+        await updateDoc(docRef, {
+            feedback: arrayUnion({
+                naam: userName,
+                klas: currentClass,
+                tekst: fbInput.value
+            })
         });
+    };
 
-        localStorage.setItem('politie_db', JSON.stringify(db));
-        renderPosts();
-    }
+    window.resetDatabase = async () => {
+        if(!confirm("Wist ALLE data voor iedereen. Doorgaan?")) return;
+        const snapshot = await getDocs(pvCollection);
+        snapshot.forEach(async (doc) => {
+            await deleteDoc(doc.ref);
+        });
+    };
 
-    function resetDatabase() {
-        if(confirm("LET OP: Hiermee wist u de database voor ALLE studenten. Weet u het zeker?")) {
-            localStorage.removeItem('politie_db');
-            renderPosts();
-        }
-    }
-
-    function renderPosts() {
-        const container = document.getElementById('output-field');
-        const db = JSON.parse(localStorage.getItem('politie_db')) || [];
-        container.innerHTML = "";
-
-        db.slice().reverse().forEach(entry => {
-            const post = document.createElement('div');
-            post.className = 'post';
-            post.innerHTML = `
-                <div class="post-header">
-                    <span>Inzending door: Verbalisant ${entry.naam}</span>
-                    <span>Klas: ${entry.klas}</span>
-                </div>
-                <div class="post-content">${entry.tekst.replace(/\n/g, '<br>')}</div>
-                <div class="feedback-section">
-                    <strong>Feedback van collega's:</strong>
-                    <div id="fb-list-${entry.id}">
-                        ${entry.feedback.map(f => `
-                            <div class="feedback-item">
-                                <strong>${f.naam} [${f.klas}]:</strong> ${f.tekst}
-                            </div>
-                        `).join('')}
+    function listenToPosts() {
+        const q = query(pvCollection, orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const container = document.getElementById('output-field');
+            container.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const entry = doc.data();
+                const id = doc.id;
+                const post = document.createElement('div');
+                post.className = 'post';
+                post.innerHTML = `
+                    <div class="post-header">
+                        <span>Verbalisant ${entry.naam}</span>
+                        <span>Klas: ${entry.klas}</span>
                     </div>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input type="text" id="fb-in-${entry.id}" placeholder="Geef feedback als ${userName}..." style="flex:1; padding:5px;">
-                        <button onclick="submitFeedback(${entry.id})" style="padding:5px 10px;">OK</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(post);
+                    <div class="post-content">${entry.tekst.replace(/\n/g, '<br>')}</div>
+                    <div class="feedback-section">
+                        <strong>Feedback:</strong>
+                        <div>${entry.feedback.map(f => `<div class="feedback-item"><strong>${f.naam} [${f.klas}]:</strong> ${f.tekst}</div>`).join('')}</div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <input type="text" id="fb-in-${id}" placeholder="Geef feedback..." style="flex:1; padding:5px;">
+                            <button onclick="submitFeedback('${id}')" style="padding:5px 10px;">OK</button>
+                        </div>
+                    </div>`;
+                container.appendChild(post);
+            });
         });
     }
-
-    // Luister naar veranderingen in andere tabbladen (voor als studenten elkaars werk live willen zien)
-    window.addEventListener('storage', () => {
-        renderPosts();
-    });
 </script>
-
 </body>
 </html>
