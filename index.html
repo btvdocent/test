@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactieve Les: Decor Schrijven voor de Politieacademie</title>
+    <title>PV-Training: Decoromschrijving - Politieacademie</title>
     <style>
         :root {
             --police-blue: #003366;
@@ -20,6 +20,39 @@
             color: #333;
         }
 
+        /* Login Overlay */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--police-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            color: #333;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+
+        /* Main Container */
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -27,16 +60,20 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none; /* Hidden until login */
         }
 
         header {
             border-bottom: 3px solid var(--police-blue);
             margin-bottom: 20px;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
         }
 
-        h1 { color: var(--police-blue); margin-bottom: 5px; }
-        h2 { color: var(--police-blue); border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        h1 { color: var(--police-blue); margin: 0; }
+        .class-badge { background: var(--police-gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
 
         .scenario-box {
             background-color: #eef4faff;
@@ -57,144 +94,122 @@
         .tag-variable { background: #fff3cd; color: #664d03; }
 
         textarea {
-            width: 100%;
-            height: 150px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-family: inherit;
-            font-size: 1em;
-            margin-bottom: 10px;
+            width: 100%; height: 150px; padding: 12px;
+            border: 1px solid #ccc; border-radius: 4px;
+            box-sizing: border-box; font-family: inherit;
+            font-size: 1em; margin-bottom: 10px;
         }
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+        .button-group { display: flex; gap: 10px; margin-bottom: 20px; }
 
         button {
             background-color: var(--police-blue);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
+            color: white; padding: 10px 20px; border: none;
+            border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
-        button:hover { background-color: #002244; }
-
-        button.reset-btn {
-            background-color: transparent;
-            color: var(--danger-red);
-            border: 1px solid var(--danger-red);
-        }
-
-        button.reset-btn:hover {
-            background-color: var(--danger-red);
-            color: white;
-        }
-
-        .output-section {
-            margin-top: 40px;
-        }
+        button.reset-btn { background: transparent; color: var(--danger-red); border: 1px solid var(--danger-red); }
+        button.reset-btn:hover { background: var(--danger-red); color: white; }
 
         .report-card {
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            position: relative;
+            background: #fff; border: 1px solid #ddd; padding: 20px;
+            margin-bottom: 20px; border-radius: 6px; position: relative;
         }
 
-        .report-text {
-            white-space: pre-wrap;
-            line-height: 1.6;
-            font-style: italic;
-            color: #444;
-        }
-
-        .feedback-container {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #ccc;
-        }
+        .report-meta { font-size: 0.8em; color: #777; margin-bottom: 10px; }
+        .report-text { white-space: pre-wrap; line-height: 1.6; font-style: italic; color: #444; }
 
         .feedback-item {
-            background: #f9f9f9;
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-            border-left: 3px solid var(--police-gold);
+            background: #f9f9f9; padding: 8px 12px; border-radius: 4px;
+            margin-bottom: 5px; font-size: 0.9em; border-left: 3px solid var(--police-gold);
         }
 
-        .feedback-input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .feedback-input-group input {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+        .feedback-input-group { display: flex; gap: 10px; margin-top: 10px; }
+        .feedback-input-group input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color: var(--police-blue)">Systeem Toegang</h2>
+        <p>Selecteer uw NATO-klas om te beginnen:</p>
+        <select id="classSelect">
+            <option value="">-- Kies een klas --</option>
+            <option>Alpha</option>
+            <option>Bravo</option>
+            <option>Charlie</option>
+            <option>Delta</option>
+            <option>Echo</option>
+            <option>Foxtrot</option>
+            <option>Golf</option>
+            <option>Hotel</option>
+            <option>Juliet</option>
+            <option>Kilo</option>
+            <option>Lima</option>
+            <option>Mike</option>
+        </select>
+        <button onclick="login()" style="width: 100%">Inloggen</button>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
     <header>
-        <h1>PV-Training: Decoromschrijving</h1>
-        <p><em>Leerdoel: Correcte toepassing van tijd en redenen van wetenschap.</em></p>
+        <div>
+            <h1>PV-Training: Decor</h1>
+            <p>Leerdoel: Redenen van wetenschap & tijdsgebruik</p>
+        </div>
+        <div class="class-badge" id="displayClass">Klas: -</div>
     </header>
 
     <section class="scenario-box">
         <h3>De Casus: Incident in de Smalle Steeg</h3>
-        <p><strong>Melding:</strong> Geluidsoverlast en mogelijke vernieling achter café 'De Tap'.</p>
         <p><strong>Locatie:</strong> Een doodlopende steeg tussen de Hoogstraat en de Kerkstraat. Er staat een grote blauwe afvalcontainer en de verlichting is matig.</p>
         <p><strong>Bij aankomst:</strong> Je ziet een man met een rode hoodie wegrennen. Er ligt glas op de grond. Een vrouw (de melder) staat trillend bij de container. Het ruikt sterk naar verschraald bier.</p>
     </section>
 
-    <section class="writing-section">
-        <h2>Schrijf hier je decor</h2>
+    <section>
+        <h2>Uw omschrijving</h2>
         <div style="margin-bottom: 10px;">
-            <span class="instruction-tag tag-fixed">Vast decor: Tegenwoordige tijd (is/staan/bevindt)</span>
-            <span class="instruction-tag tag-variable">Variabel decor: Verleden tijd + Zintuiglijk (ik zag/ik rook/ik hoorde)</span>
+            <span class="instruction-tag tag-fixed">Vast decor: Tegenwoordige tijd</span>
+            <span class="instruction-tag tag-variable">Variabel decor: Verleden tijd + Zintuiglijk</span>
         </div>
-        <textarea id="reportInput" placeholder="Begin met: 'Ter plaatse gekomen zag ik dat...'"></textarea>
+        <textarea id="reportInput" placeholder="Bijv: De steeg is doodlopend... Ter plaatse gekomen zag ik dat..."></textarea>
         
         <div class="button-group">
             <button onclick="submitReport()">Publiceer Verslag</button>
-            <button class="reset-btn" onclick="resetDatabase()">Lessen herstarten (Leegmaken)</button>
+            <button class="reset-btn" onclick="resetDatabase()">Lessen herstarten</button>
         </div>
     </section>
 
-    <section class="output-section">
-        <h2>Gepubliceerde Verslagen & Feedback</h2>
-        <div id="reportsDisplay">
-            </div>
-    </section>
+    <div id="reportsDisplay"></div>
 </div>
 
 <script>
     let reports = [];
+    let currentClass = "";
+
+    function login() {
+        const select = document.getElementById('classSelect');
+        currentClass = select.value;
+        if (!currentClass) {
+            alert("Selecteer eerst een klas.");
+            return;
+        }
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('displayClass').innerText = "Klas: " + currentClass;
+        renderReports();
+    }
 
     function submitReport() {
         const text = document.getElementById('reportInput').value;
-        if (text.trim() === "") {
-            alert("Schrijf eerst een tekst voordat je deze publiceert.");
-            return;
-        }
+        if (text.trim() === "") return;
 
         const reportObject = {
             id: Date.now(),
+            klas: currentClass,
+            tijd: new Date().toLocaleTimeString(),
             content: text,
             feedback: []
         };
@@ -206,20 +221,16 @@
 
     function addFeedback(reportId) {
         const input = document.getElementById(`fb-input-${reportId}`);
-        const feedbackText = input.value;
-
-        if (feedbackText.trim() === "") return;
+        if (!input.value.trim()) return;
 
         const report = reports.find(r => r.id === reportId);
-        report.feedback.push(feedbackText);
-        
+        report.feedback.push(`[${currentClass}] ${input.value}`);
         input.value = "";
         renderReports();
     }
 
     function resetDatabase() {
-        const confirmReset = confirm("Weet u zeker dat u alle ingezonden verslagen en feedback wilt verwijderen? Dit kan niet ongedaan worden gemaakt.");
-        if (confirmReset) {
+        if (confirm("Alle data van deze sessie wissen?")) {
             reports = [];
             renderReports();
         }
@@ -227,38 +238,31 @@
 
     function renderReports() {
         const display = document.getElementById('reportsDisplay');
-        display.innerHTML = "";
+        display.innerHTML = "<h2>Gepubliceerde Verslagen</h2>";
 
         if (reports.length === 0) {
-            display.innerHTML = '<p style="color: #999; text-align: center; margin-top: 20px;">Er zijn nog geen verslagen gepubliceerd.</p>';
+            display.innerHTML += '<p style="color: #999;">Nog geen inzendingen.</p>';
             return;
         }
 
         reports.forEach(report => {
             const card = document.createElement('div');
             card.className = 'report-card';
-
-            let feedbackHtml = report.feedback.map(fb => `
-                <div class="feedback-item">${fb}</div>
-            `).join('');
-
             card.innerHTML = `
+                <div class="report-meta">Ingezonden door Klas ${report.klas} om ${report.tijd}</div>
                 <div class="report-text">${report.content}</div>
-                <div class="feedback-container">
-                    <strong>Feedback van collega's:</strong>
-                    <div id="fb-list-${report.id}">${feedbackHtml || '<p style="color: #999; font-size: 0.8em;">Nog geen feedback ontvangen.</p>'}</div>
+                <div style="margin-top:15px; border-top: 1px dashed #ccc; padding-top:10px;">
+                    <strong>Feedback:</strong>
+                    <div id="fb-list-${report.id}">${report.feedback.map(fb => `<div class="feedback-item">${fb}</div>`).join('') || '<p style="font-size:0.8em; color:#999">Geen feedback.</p>'}</div>
                     <div class="feedback-input-group">
-                        <input type="text" id="fb-input-${report.id}" placeholder="Geef feedback...">
-                        <button onclick="addFeedback(${report.id})" style="padding: 5px 10px; font-size: 0.8em;">OK</button>
+                        <input type="text" id="fb-input-${report.id}" placeholder="Geef feedback als ${currentClass}...">
+                        <button onclick="addFeedback(${report.id})" style="padding:5px 10px">OK</button>
                     </div>
                 </div>
             `;
             display.appendChild(card);
         });
     }
-
-    // Initial check
-    renderReports();
 </script>
 
 </body>
